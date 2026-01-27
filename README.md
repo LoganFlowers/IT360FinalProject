@@ -1,9 +1,9 @@
 # IT360FinalProject
 
-#Team members:
+# Team members:
 Logan
 Hunter
 Brett
 
-#Project idea:
+# Project idea:
 no idea
