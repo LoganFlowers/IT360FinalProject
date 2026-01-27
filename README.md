@@ -1,9 +1,9 @@
 # IT360FinalProject
 
 # Team members:
-Logan
-Hunter
-Brett
+## Logan
+## Hunter
+## Brett
 
 # Project idea:
 no idea
