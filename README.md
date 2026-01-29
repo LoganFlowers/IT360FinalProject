@@ -1,4 +1,4 @@
-# IT360FinalProject
+# IT 360 Final Project
 
 # Team members:
 * Logan
