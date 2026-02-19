@@ -23,4 +23,7 @@ A Bash script that:
 ### Stretch ideas if time allows 
 * “Minimal footprint” mode (no disk writes until final archive) 
 * JSON output for SIEM import 
-* Live vs dead system comparison mode 
+* Live vs dead system comparison mode
+### AI Utilization
+* We plan to use AI to generate the summary report
+* This will ensure that the report is easily readable and will quickly allow all information to be summarized efficiently
