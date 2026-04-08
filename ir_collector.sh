@@ -124,6 +124,7 @@ generate_summary() {
     log "Generating summary report..."
 
     SUMMARY_FILE="${OUTPUT_DIR}/summary.txt"
+    AI_SUMMARY_FILE="${OUTPUT_DIR}/ai_summary.txt"
 
     {
         echo "===== INCIDENT RESPONSE SUMMARY ====="
@@ -147,9 +148,26 @@ generate_summary() {
         tail -n 20 /var/log/syslog 2>/dev/null || echo "syslog not available"
     } > "$SUMMARY_FILE"
 
-    # Optional AI hook (placeholder)
-    if command -v python3 &>/dev/null; then
-        log "AI summary placeholder (extend with API integration)"
+    # =========================
+    # AI SUMMARY VIA SUSHI API
+    # =========================
+    if command -v curl &>/dev/null && command -v jq &>/dev/null; then
+        log "Sending summary to sushi.it.ilstu.edu for AI analysis..."
+
+        API_URL="https://sushi.it.ilstu.edu/api/summarize"
+        API_KEY="YOUR_API_KEY_HERE"   # <-- replace with API key
+
+        RESPONSE=$(curl -s -X POST "$API_URL" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $API_KEY" \
+            -d "$(jq -n --arg text "$(cat $SUMMARY_FILE)" '{text: $text}')")
+
+        # Extract AI summary
+        echo "$RESPONSE" | jq -r '.summary' > "$AI_SUMMARY_FILE"
+
+        log "AI summary saved to $AI_SUMMARY_FILE"
+    else
+        log "curl or jq not installed — skipping AI summary"
     fi
 }
 
