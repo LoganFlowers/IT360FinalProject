@@ -27,3 +27,9 @@ A Bash script that:
 ### AI Utilization
 * We plan to use AI to generate the summary report
 * This will ensure that the report is easily readable and will quickly allow all information to be summarized efficiently
+
+-----------------------------------------
+### Setup Instructions
+
+-----------------------------------------
+### Video Presentation Link
