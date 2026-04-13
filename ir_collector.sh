@@ -149,21 +149,36 @@ generate_summary() {
     } > "$SUMMARY_FILE"
 
     # =========================
-    # AI SUMMARY VIA SUSHI API
+    # AI SUMMARY (SUSHI CHAT API)
     # =========================
     if command -v curl &>/dev/null && command -v jq &>/dev/null; then
-        log "Sending summary to sushi.it.ilstu.edu for AI analysis..."
+        log "Sending summary to sushi.it.ilstu.edu AI..."
 
-        API_URL="https://sushi.it.ilstu.edu/api/summarize"
-        API_KEY="YOUR_API_KEY_HERE"   # <-- replace with API key
+        API_URL="http://sushi.it.ilstu.edu:8080/api/chat/completions"
+        API_KEY="PASTE KEY HERE"
+        MODEL="translategemma:latest"
+
+        # Build JSON payload
+        PAYLOAD=$(jq -n \
+            --arg model "$MODEL" \
+            --arg content "$(cat "$SUMMARY_FILE")" \
+            '{
+                model: $model,
+                messages: [
+                    {
+                        role: "user",
+                        content: ("Analyze the following incident response data and provide a concise security summary, highlighting suspicious activity, potential compromise, and recommended actions:\n\n" + $content)
+                    }
+                ]
+            }')
 
         RESPONSE=$(curl -s -X POST "$API_URL" \
-            -H "Content-Type: application/json" \
             -H "Authorization: Bearer $API_KEY" \
-            -d "$(jq -n --arg text "$(cat $SUMMARY_FILE)" '{text: $text}')")
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
 
-        # Extract AI summary
-        echo "$RESPONSE" | jq -r '.summary' > "$AI_SUMMARY_FILE"
+        # Extract AI message content
+        echo "$RESPONSE" | jq -r '.choices[0].message.content // "AI summary failed"' > "$AI_SUMMARY_FILE"
 
         log "AI summary saved to $AI_SUMMARY_FILE"
     else
