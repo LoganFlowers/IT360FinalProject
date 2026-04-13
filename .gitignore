@@ -1,18 +1,21 @@
 # =========================
-# Evidence / Output Files
+# Evidence Output (Generated Artifacts)
 # =========================
 IR_Evidence_*/
 *.tar.gz
 *.tar.gz.enc
 *.enc
-*.log
-*.sha256
-*.txt
 
-# Logs & Reports
-collection.log
+# Core forensic outputs
 summary.txt
 ai_summary.txt
+api_raw.json
+debug_sent_to_ai.txt
+hashes.sha256
+collection.log
+
+# Logs directory inside evidence bundle
+logs/
 
 # =========================
 # System / OS Files
@@ -21,7 +24,15 @@ ai_summary.txt
 Thumbs.db
 
 # =========================
-# Environment / Secrets
+# Temporary / Runtime Files
+# =========================
+*.tmp
+*.log.tmp
+tmp/
+temp/
+
+# =========================
+# Secrets / Credentials
 # =========================
 .env
 .env.*
@@ -29,22 +40,23 @@ Thumbs.db
 *.pem
 
 # =========================
-# Python (if AI script used)
+# Python (only if future AI scripts are added)
 # =========================
 __pycache__/
 *.pyc
 venv/
-.env/
+.venv/
 
 # =========================
-# Editor / IDE
+# Editors / IDEs
 # =========================
 .vscode/
 .idea/
 *.swp
+*.swo
 
 # =========================
-# Temporary Files
+# Archive / Backup Files
 # =========================
-tmp/
-*.tmp
+*.bak
+*.backup
