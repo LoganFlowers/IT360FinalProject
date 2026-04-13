@@ -32,7 +32,7 @@ A Bash script that:
 ### Setup and Usage
 ## Setup
 1. Clone the Repository
-git clone https://github.com/yourusername/ir-evidence-collector.git
+git clone https://github.com/LoganFlowers/IT360FinalProject.git
 cd ir-evidence-collector
 2. Install System Dependencies (Ubuntu/Debian)
 sudo apt update
@@ -49,6 +49,8 @@ sudo apt install -y \
 Note: Some tools such as lsof and netstat are optional but recommended for full forensic visibility.
 
 3. Configure AI API Key
+
+Create an account at http://sushi.it.ilstu.edu:8080/ and generate an API key
 
 Open the script:
 
