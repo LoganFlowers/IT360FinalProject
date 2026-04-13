@@ -4,73 +4,61 @@
 # Linux Incident Response Evidence Collector
 # =========================
 
-# Exit on error
 set -e
 
-# Global variables
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 HOSTNAME=$(hostname)
 OUTPUT_DIR="IR_Evidence_${HOSTNAME}_${TIMESTAMP}"
 LOG_FILE="${OUTPUT_DIR}/collection.log"
 HASH_FILE="${OUTPUT_DIR}/hashes.sha256"
-ARCHIVE_NAME="${OUTPUT_DIR}.tar.gz.enc"
 
-# Encryption password prompt
-read -s -p "Enter encryption password: " ENC_PASS
-echo
+# AI Config
+API_URL="http://sushi.it.ilstu.edu:8080/api/chat/completions"
+API_KEY="PASTE KEY HERE"
+MODEL="translategemma:latest"
 
 # =========================
-# Logging Function
+# Logging
 # =========================
 log() {
     echo "[$(date +"%F %T")] $1" | tee -a "$LOG_FILE"
 }
 
 # =========================
-# Initialize Environment
+# Init
 # =========================
 init() {
     mkdir -p "$OUTPUT_DIR"
     touch "$LOG_FILE"
-    log "Initialized evidence collection at $TIMESTAMP"
+    log "Initialized evidence collection"
 }
 
 # =========================
-# Collect System Info
+# System Info
 # =========================
 collect_system_info() {
     log "Collecting system information..."
+
     {
-        echo "===== SYSTEM INFO ====="
         uname -a
-        echo
-        echo "===== OS RELEASE ====="
-        cat /etc/os-release 2>/dev/null
-        echo
-        echo "===== UPTIME ====="
+        cat /etc/os-release 2>/dev/null || true
         uptime
-        echo
-        echo "===== CPU INFO ====="
-        lscpu 2>/dev/null
-        echo
-        echo "===== MEMORY ====="
-        free -h
-        echo
-        echo "===== DISK ====="
-        df -h
+        lscpu 2>/dev/null || true
+        free -h || true
+        df -h || true
     } > "${OUTPUT_DIR}/system_info.txt"
 }
 
 # =========================
-# Collect Processes
+# Processes
 # =========================
 collect_processes() {
-    log "Collecting running processes..."
+    log "Collecting processes..."
     ps aux > "${OUTPUT_DIR}/processes.txt"
 }
 
 # =========================
-# Collect Open Files
+# Open Files
 # =========================
 collect_open_files() {
     log "Collecting open files..."
@@ -78,50 +66,49 @@ collect_open_files() {
 }
 
 # =========================
-# Collect Network Info
+# Network
 # =========================
 collect_network() {
     log "Collecting network connections..."
+
     {
-        echo "===== NETSTAT ====="
-        netstat -tulnp 2>/dev/null
-        echo
         echo "===== SS ====="
-        ss -tulnp
+        ss -tulnp -n || echo "ss failed"
+
         echo
         echo "===== ROUTES ====="
-        ip route
+        ip route || true
+
         echo
         echo "===== ARP ====="
-        ip neigh
+        ip neigh || true
     } > "${OUTPUT_DIR}/network.txt"
 }
 
 # =========================
-# Collect Logs
+# Logs
 # =========================
 collect_logs() {
     log "Collecting logs..."
     mkdir -p "${OUTPUT_DIR}/logs"
 
-    cp -r /var/log/* "${OUTPUT_DIR}/logs/" 2>/dev/null || log "Could not copy all /var/log files"
-
-    journalctl --no-pager > "${OUTPUT_DIR}/logs/journalctl.txt" 2>/dev/null || log "journalctl unavailable"
+    cp -r /var/log/* "${OUTPUT_DIR}/logs/" 2>/dev/null || true
+    journalctl --no-pager > "${OUTPUT_DIR}/logs/journalctl.txt" 2>/dev/null || true
 }
 
 # =========================
-# Hash Artifacts (SHA-256)
+# Hashing
 # =========================
 hash_artifacts() {
-    log "Hashing collected artifacts..."
+    log "Hashing artifacts..."
     find "$OUTPUT_DIR" -type f ! -name "hashes.sha256" -exec sha256sum {} \; > "$HASH_FILE"
 }
 
 # =========================
-# Generate Summary Report
+# Summary + AI
 # =========================
 generate_summary() {
-    log "Generating summary report..."
+    log "Generating summary..."
 
     SUMMARY_FILE="${OUTPUT_DIR}/summary.txt"
     AI_SUMMARY_FILE="${OUTPUT_DIR}/ai_summary.txt"
@@ -132,42 +119,40 @@ generate_summary() {
         echo "Timestamp: $TIMESTAMP"
         echo
 
-        echo "Top 10 Processes by CPU:"
-        ps aux --sort=-%cpu | head -n 11
-        echo
+        echo "Top Processes by CPU:"
+        ps aux --sort=-%cpu | head -n 10
 
-        echo "Top 10 Processes by Memory:"
-        ps aux --sort=-%mem | head -n 11
         echo
-
         echo "Active Network Connections:"
-        ss -tunap | head -n 20
-        echo
+        ss -tunap -n | head -n 20
 
-        echo "Recent Log Entries:"
+        echo
+        echo "Recent Logs:"
         tail -n 20 /var/log/syslog 2>/dev/null || echo "syslog not available"
     } > "$SUMMARY_FILE"
 
     # =========================
-    # AI SUMMARY (SUSHI CHAT API)
+    # SANITIZE + LIMIT INPUT
+    # =========================
+    CLEAN_SUMMARY=$(sed 's#/proc/[a-zA-Z0-9_/.-]*#[REDACTED_PROC_PATH]#g' "$SUMMARY_FILE" | head -c 8000)
+
+    echo "$CLEAN_SUMMARY" > "${OUTPUT_DIR}/debug_sent_to_ai.txt"
+
+    # =========================
+    # AI CALL
     # =========================
     if command -v curl &>/dev/null && command -v jq &>/dev/null; then
-        log "Sending summary to sushi.it.ilstu.edu AI..."
+        log "Sending sanitized summary to AI..."
 
-        API_URL="http://sushi.it.ilstu.edu:8080/api/chat/completions"
-        API_KEY="PASTE KEY HERE"
-        MODEL="translategemma:latest"
-
-        # Build JSON payload
         PAYLOAD=$(jq -n \
             --arg model "$MODEL" \
-            --arg content "$(cat "$SUMMARY_FILE")" \
+            --arg content "$CLEAN_SUMMARY" \
             '{
                 model: $model,
                 messages: [
                     {
                         role: "user",
-                        content: ("Analyze the following incident response data and provide a concise security summary, highlighting suspicious activity, potential compromise, and recommended actions:\n\n" + $content)
+                        content: ("You are a cybersecurity analyst. Analyze this incident response data.\n\nIdentify:\n- Suspicious processes\n- Network anomalies\n- Indicators of compromise\n- Severity level\n\nData:\n\n" + $content)
                     }
                 ]
             }')
@@ -177,12 +162,13 @@ generate_summary() {
             -H "Content-Type: application/json" \
             -d "$PAYLOAD")
 
-        # Extract AI message content
+        echo "$RESPONSE" > "${OUTPUT_DIR}/api_raw.json"
+
         echo "$RESPONSE" | jq -r '.choices[0].message.content // "AI summary failed"' > "$AI_SUMMARY_FILE"
 
-        log "AI summary saved to $AI_SUMMARY_FILE"
+        log "AI summary saved"
     else
-        log "curl or jq not installed — skipping AI summary"
+        log "curl/jq missing — skipping AI"
     fi
 }
 
@@ -190,17 +176,23 @@ generate_summary() {
 # Compress + Encrypt
 # =========================
 compress_encrypt() {
-    log "Compressing evidence..."
+    log "Compressing..."
+
     tar -czf "${OUTPUT_DIR}.tar.gz" "$OUTPUT_DIR"
 
-    log "Encrypting archive..."
-    openssl enc -aes-256-cbc -salt -in "${OUTPUT_DIR}.tar.gz" -out "$ARCHIVE_NAME" -k "$ENC_PASS"
+    read -s -p "Enter encryption password: " ENC_PASS
+    echo
+
+    openssl enc -aes-256-cbc -salt -in "${OUTPUT_DIR}.tar.gz" \
+        -out "${OUTPUT_DIR}.tar.gz.enc" -k "$ENC_PASS"
 
     rm "${OUTPUT_DIR}.tar.gz"
+
+    log "Encrypted archive created"
 }
 
 # =========================
-# Main Execution
+# Main
 # =========================
 main() {
     init
@@ -213,7 +205,7 @@ main() {
     generate_summary
     compress_encrypt
 
-    log "Collection complete. Encrypted archive: $ARCHIVE_NAME"
+    log "Collection complete"
 }
 
 main
