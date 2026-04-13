@@ -63,8 +63,10 @@ API_KEY="PASTE KEY HERE"
 Replace it with your actual API key:
 
 API_KEY="your_real_api_key"
+
 4. Make Script Executable
 chmod +x ir_collector.sh
+
 5. Optional Dependency Check
 which curl jq ss ip openssl
 #Usage
