@@ -35,8 +35,8 @@ A Bash script that:
 git clone https://github.com/LoganFlowers/IT360FinalProject.git
 cd ir-evidence-collector
 2. Install System Dependencies (Ubuntu/Debian)
-sudo apt update
-sudo apt install -y \
+*sudo apt update
+*sudo apt install -y \
     lsof \
     net-tools \
     iproute2 \
