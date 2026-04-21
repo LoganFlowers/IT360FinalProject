@@ -83,16 +83,17 @@ The script creates a directory in the following format:
 
 IR_Evidence_<hostname>_<timestamp>/
 ## Contents
-system_info.txt – system and hardware information
-processes.txt – running processes
-open_files.txt – open file handles
-network.txt – network connections and routing data
-logs/ – system and journal logs
-summary.txt – generated incident summary
-ai_summary.txt – AI-generated analysis
-hashes.sha256 – file integrity hashes
-api_raw.json – raw AI API response (debugging)
-debug_sent_to_ai.txt – sanitized AI input
+* system_info.txt – system and hardware information
+* processes.txt – running processes
+* open_files.txt – open file handles
+* network.txt – network connections and routing data
+* logs/ – system and journal logs
+* summary.txt – generated incident summary
+* ai_summary.txt – AI-generated analysis
+* hashes.sha256 – file integrity hashes
+* api_raw.json – raw AI API response (debugging)
+* debug_sent_to_ai.txt – sanitized AI input
+  
 ## Final Archive
 IR_Evidence_<hostname>_<timestamp>.tar.gz.enc
 Verification
