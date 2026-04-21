@@ -5,6 +5,8 @@
 * Hunter
 * Brett
 
+# * NOTE - All programming was performed via paired programming on one machine, hence the uneven distribution of commits.
+
 # Project idea:
 ## Linux Incident Response Evidence Collector (Bash) 
 
