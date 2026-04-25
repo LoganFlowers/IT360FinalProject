@@ -112,8 +112,9 @@ cat IR_Evidence_*/api_raw.json
 
 cat IR_Evidence_*/debug_sent_to_ai.txt
 ## Notes  
-* The script must be run as root to collect full system data
+* The script must be run as root to collect full system data 
 * AI functionality requires curl and jq
 * System data is sent to an external AI endpoint for analysis; use only in trusted environments
 -----------------------------------------
 ### Video Presentation Link
+* https://youtu.be/sgN3TRF8eh0
